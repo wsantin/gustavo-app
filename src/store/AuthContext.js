@@ -3,7 +3,7 @@ import {
   onAuthStateChanged,
   signOut 
 } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { auth, checkFirestoreConnection } from '../services/firebase';
 
 const AuthContext = createContext({});
 
@@ -19,17 +19,48 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
 
   useEffect(() => {
     console.log('🔥 AuthContext: Iniciando listener de auth state');
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    
+    // Timeout para el loading inicial
+    const loadingTimeout = setTimeout(() => {
+      if (loading) {
+        console.log('⏰ AuthContext: Timeout de carga inicial alcanzado');
+        setLoading(false);
+        setConnectionStatus('timeout');
+      }
+    }, 10000); // 10 segundos timeout
+    
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('🔄 AuthContext: Cambio de estado de auth:', user ? `Usuario: ${user.email}` : 'Sin usuario');
+      
+      clearTimeout(loadingTimeout);
+      
       setCurrentUser(user);
       setLoading(false);
+      
+      if (user) {
+        // Verificar conexión a Firestore cuando el usuario se autentique
+        const isConnected = await checkFirestoreConnection();
+        setConnectionStatus(isConnected ? 'connected' : 'disconnected');
+      } else {
+        setConnectionStatus('disconnected');
+      }
+    }, (error) => {
+      console.error('❌ AuthContext: Error en auth state listener:', error);
+      clearTimeout(loadingTimeout);
+      setError(error.message);
+      setLoading(false);
+      setConnectionStatus('error');
     });
 
-    return unsubscribe;
-  }, []);
+    return () => {
+      clearTimeout(loadingTimeout);
+      unsubscribe();
+    };
+  }, [loading]);
 
   const logout = async () => {
     try {
@@ -49,10 +80,11 @@ export const AuthProvider = ({ children }) => {
     currentUser,
     loading,
     error,
+    connectionStatus,
     logout,
     clearError,
     setError
-  }), [currentUser, loading, error]);
+  }), [currentUser, loading, error, connectionStatus]);
 
   return (
     <AuthContext.Provider value={value}>
