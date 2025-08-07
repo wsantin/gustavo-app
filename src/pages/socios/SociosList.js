@@ -81,11 +81,21 @@ function SociosList() {
 
   useEffect(() => {
     loadInitialData();
+    // Cargar socios solo una vez al montar el componente
+    loadSocios();
   }, []);
 
-  useEffect(() => {
+  // Función para manejar búsqueda manual
+  const handleSearch = () => {
     loadSocios();
-  }, [searchTerm, zonaFilter, estadoFilter]);
+  };
+
+  // Solo recargar cuando cambian los filtros de zona y estado
+  useEffect(() => {
+    if (zonaFilter || estadoFilter) {
+      loadSocios();
+    }
+  }, [zonaFilter, estadoFilter]);
 
   const loadInitialData = async () => {
     try {
@@ -306,15 +316,30 @@ function SociosList() {
       <Paper sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              placeholder="Buscar personal por DNI, nombre, apellido o celular..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-              }}
-            />
+            <Box display="flex" gap={1}>
+              <TextField
+                fullWidth
+                placeholder="Buscar personal por DNI, nombre, apellido o celular..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
+                InputProps={{
+                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                }}
+              />
+              <Button
+                variant="outlined"
+                onClick={handleSearch}
+                disabled={loading}
+                sx={{ minWidth: 'auto', px: 2 }}
+              >
+                {loading ? <CircularProgress size={20} /> : <SearchIcon />}
+              </Button>
+            </Box>
           </Grid>
 
           <Grid item xs={12} md={2}>
