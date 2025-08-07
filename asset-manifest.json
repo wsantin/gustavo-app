@@ -1,12 +1,12 @@
 {
   "files": {
     "main.css": "/gustavo-app/static/css/main.e6c13ad2.css",
-    "main.js": "/gustavo-app/static/js/main.a7fb9511.js",
-    "static/js/331.635dcd53.chunk.js": "/gustavo-app/static/js/331.635dcd53.chunk.js",
+    "main.js": "/gustavo-app/static/js/main.cb1be27e.js",
+    "static/js/331.35eea110.chunk.js": "/gustavo-app/static/js/331.35eea110.chunk.js",
     "static/js/622.72a6e071.chunk.js": "/gustavo-app/static/js/622.72a6e071.chunk.js",
-    "static/js/658.f9db911e.chunk.js": "/gustavo-app/static/js/658.f9db911e.chunk.js",
-    "static/js/669.6df4e228.chunk.js": "/gustavo-app/static/js/669.6df4e228.chunk.js",
-    "static/js/248.4baba704.chunk.js": "/gustavo-app/static/js/248.4baba704.chunk.js",
+    "static/js/658.79e70258.chunk.js": "/gustavo-app/static/js/658.79e70258.chunk.js",
+    "static/js/669.d2e59420.chunk.js": "/gustavo-app/static/js/669.d2e59420.chunk.js",
+    "static/js/248.2bbd0fbb.chunk.js": "/gustavo-app/static/js/248.2bbd0fbb.chunk.js",
     "static/js/488.aac1cbe9.chunk.js": "/gustavo-app/static/js/488.aac1cbe9.chunk.js",
     "static/js/206.fef98079.chunk.js": "/gustavo-app/static/js/206.fef98079.chunk.js",
     "static/js/434.f01caf0b.chunk.js": "/gustavo-app/static/js/434.f01caf0b.chunk.js",
@@ -18,12 +18,12 @@
     "static/js/199.f01600b5.chunk.js": "/gustavo-app/static/js/199.f01600b5.chunk.js",
     "index.html": "/gustavo-app/index.html",
     "main.e6c13ad2.css.map": "/gustavo-app/static/css/main.e6c13ad2.css.map",
-    "main.a7fb9511.js.map": "/gustavo-app/static/js/main.a7fb9511.js.map",
-    "331.635dcd53.chunk.js.map": "/gustavo-app/static/js/331.635dcd53.chunk.js.map",
+    "main.cb1be27e.js.map": "/gustavo-app/static/js/main.cb1be27e.js.map",
+    "331.35eea110.chunk.js.map": "/gustavo-app/static/js/331.35eea110.chunk.js.map",
     "622.72a6e071.chunk.js.map": "/gustavo-app/static/js/622.72a6e071.chunk.js.map",
-    "658.f9db911e.chunk.js.map": "/gustavo-app/static/js/658.f9db911e.chunk.js.map",
-    "669.6df4e228.chunk.js.map": "/gustavo-app/static/js/669.6df4e228.chunk.js.map",
-    "248.4baba704.chunk.js.map": "/gustavo-app/static/js/248.4baba704.chunk.js.map",
+    "658.79e70258.chunk.js.map": "/gustavo-app/static/js/658.79e70258.chunk.js.map",
+    "669.d2e59420.chunk.js.map": "/gustavo-app/static/js/669.d2e59420.chunk.js.map",
+    "248.2bbd0fbb.chunk.js.map": "/gustavo-app/static/js/248.2bbd0fbb.chunk.js.map",
     "488.aac1cbe9.chunk.js.map": "/gustavo-app/static/js/488.aac1cbe9.chunk.js.map",
     "206.fef98079.chunk.js.map": "/gustavo-app/static/js/206.fef98079.chunk.js.map",
     "434.f01caf0b.chunk.js.map": "/gustavo-app/static/js/434.f01caf0b.chunk.js.map",
@@ -36,6 +36,6 @@
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.a7fb9511.js"
+    "static/js/main.cb1be27e.js"
   ]
 }
