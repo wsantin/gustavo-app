@@ -43,7 +43,7 @@ import {
   KeyboardArrowDown as KeyboardArrowDownIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import sociosService from '../../services/socios.service';
+import sociosService from '../../services/personal.service';
 import zonasService from '../../services/zonas.service';
 
 function SociosList() {
@@ -81,11 +81,19 @@ function SociosList() {
 
   useEffect(() => {
     loadInitialData();
+    // Cargar socios solo una vez al montar el componente
+    loadSocios();
   }, []);
 
+  // Función para manejar búsqueda manual
+  const handleSearch = () => {
+    loadSocios();
+  };
+
+  // Solo recargar cuando cambia el filtro de zona
   useEffect(() => {
     loadSocios();
-  }, [searchTerm, zonaFilter, estadoFilter]);
+  }, [zonaFilter]);
 
   const loadInitialData = async () => {
     try {
@@ -107,10 +115,11 @@ function SociosList() {
     setLoading(true);
     setError('');
     try {
+      console.log('🔍 Aplicando filtros:', { searchTerm, zona: zonaFilter });
+      
       const result = await sociosService.getSocios({
         searchTerm,
-        zona: zonaFilter,
-        estado: estadoFilter
+        zona: zonaFilter
       });
 
       if (result.success) {
@@ -169,7 +178,8 @@ function SociosList() {
   const clearFilters = () => {
     setSearchTerm('');
     setZonaFilter('');
-    setEstadoFilter('');
+    // Recargar datos sin filtros
+    loadSocios();
   };
 
   const getInitials = (nombres, apellidos) => {
@@ -243,7 +253,7 @@ function SociosList() {
 
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
-  // Filtrar y ordenar datos
+  // Filtrar y ordenar datos (sin filtro de estado)
   const filteredSocios = socios.filter(socio => {
     const matchesSearch = !searchTerm || 
       socio.dni?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -252,9 +262,8 @@ function SociosList() {
       socio.celular?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesZona = !zonaFilter || socio.zona === zonaFilter;
-    const matchesEstado = !estadoFilter || socio.estado === estadoFilter;
     
-    return matchesSearch && matchesZona && matchesEstado;
+    return matchesSearch && matchesZona;
   });
 
   const sortedSocios = stableSort(filteredSocios, getComparator(order, orderBy));
@@ -306,15 +315,30 @@ function SociosList() {
       <Paper sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              placeholder="Buscar personal por DNI, nombre, apellido o celular..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-              }}
-            />
+            <Box display="flex" gap={1}>
+              <TextField
+                fullWidth
+                placeholder="Buscar personal por DNI, nombre, apellido o celular..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
+                InputProps={{
+                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                }}
+              />
+              <Button
+                variant="outlined"
+                onClick={handleSearch}
+                disabled={loading}
+                sx={{ minWidth: 'auto', px: 2 }}
+              >
+                {loading ? <CircularProgress size={20} /> : <SearchIcon />}
+              </Button>
+            </Box>
           </Grid>
 
           <Grid item xs={12} md={2}>
@@ -323,6 +347,7 @@ function SociosList() {
               <Select
                 value={zonaFilter}
                 label="Zona"
+                sx={{ minWidth: 120 }}
                 onChange={(e) => setZonaFilter(e.target.value)}
               >
                 <MenuItem value="">Todas</MenuItem>
@@ -331,21 +356,6 @@ function SociosList() {
                     {zona.nombre}
                   </MenuItem>
                 ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Estado</InputLabel>
-              <Select
-                value={estadoFilter}
-                label="Estado"
-                onChange={(e) => setEstadoFilter(e.target.value)}
-              >
-                <MenuItem value="">Todos</MenuItem>
-                <MenuItem value="activo">Activo</MenuItem>
-                <MenuItem value="inactivo">Inactivo</MenuItem>
               </Select>
             </FormControl>
           </Grid>

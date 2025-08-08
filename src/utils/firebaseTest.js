@@ -66,8 +66,8 @@ export const createTestDocument = async () => {
   }
 };
 
-// Ejecutar diagnóstico al cargar
-if (process.env.NODE_ENV === 'development') {
-  // Ejecutar después de un delay para que Firebase se inicialice
-  setTimeout(testFirebaseConnection, 2000);
-}
+// Ejecutar diagnóstico al cargar - DESACTIVADO para evitar llamadas automáticas
+// if (process.env.NODE_ENV === 'development') {
+//   // Ejecutar después de un delay para que Firebase se inicialice
+//   setTimeout(testFirebaseConnection, 2000);
+// }

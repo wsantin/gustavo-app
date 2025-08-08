@@ -18,7 +18,7 @@ import { db, auth } from './firebase';
 
 class SociosService {
   constructor() {
-    this.collectionName = 'socios';
+    this.collectionName = 'personal';
   }
 
   async createSocio(socioData) {
@@ -42,7 +42,7 @@ class SociosService {
       return {
         success: true,
         id: docRef.id,
-        message: 'Socio creado exitosamente'
+        message: 'Personal creado exitosamente'
       };
     } catch (error) {
       console.error('Error al crear socio:', error);
@@ -56,63 +56,68 @@ class SociosService {
   async getSocios(options = {}) {
     try {
       const {
-        pageSize = 10,
-        lastDoc = null,
+        pageSize = 100, // Aumentamos para filtrar del lado cliente
         searchTerm = '',
         zona = '',
         campana = '',
-        estado = '',
-        orderField = 'fechaCreacion',
-        orderDirection = 'desc'
+        estado = ''
       } = options;
 
+      console.log('🔍 Buscando personal con filtros:', { searchTerm, zona, campana, estado });
+
+      // Query simple sin índices complejos
       let q = collection(db, this.collectionName);
-      const conditions = [];
-
-      // Filtros
-      if (zona) conditions.push(where('zona', '==', zona));
-      if (campana) conditions.push(where('campana', '==', campana));
-      if (estado) conditions.push(where('estado', '==', estado));
-
-      // Aplicar condiciones
-      if (conditions.length > 0) {
-        q = query(q, ...conditions);
-      }
-
-      // Ordenamiento
-      q = query(q, orderBy(orderField, orderDirection));
-
-      // Paginación
-      if (lastDoc) {
-        q = query(q, startAfter(lastDoc));
-      }
-      q = query(q, limit(pageSize));
+      
+      // Solo ordenar por fecha de creación (sin filtros server-side por ahora)
+      q = query(q, orderBy('fechaCreacion', 'desc'), limit(pageSize));
 
       const snapshot = await getDocs(q);
-      const socios = snapshot.docs.map(doc => ({
+      let socios = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
-      // Filtro de búsqueda por texto (lado cliente)
-      let filteredSocios = socios;
+      console.log('📊 Total documentos obtenidos:', socios.length);
+
+      // FILTROS DEL LADO CLIENTE (temporal hasta crear índices)
+      if (zona && zona !== '') {
+        socios = socios.filter(socio => socio.zona === zona);
+        console.log('🏢 Filtrados por zona:', socios.length);
+      } else if (zona === '') {
+        console.log('🏢 Mostrando todas las zonas');
+      }
+
+      if (campana) {
+        socios = socios.filter(socio => socio.campana === campana);
+        console.log('📢 Filtrados por campaña:', socios.length);
+      }
+
+      if (estado) {
+        socios = socios.filter(socio => socio.estado === estado);
+        console.log('📊 Filtrados por estado:', socios.length);
+      }
+
+      // Filtro de búsqueda por texto
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
-        filteredSocios = socios.filter(socio =>
+        socios = socios.filter(socio =>
           (socio.nombres || '').toLowerCase().includes(term) ||
           (socio.apellidos || '').toLowerCase().includes(term) ||
-          (socio.celular || '').includes(term)
+          (socio.celular || '').includes(term) ||
+          (socio.dni || '').includes(term)
         );
+        console.log('🔍 Filtrados por búsqueda:', socios.length);
       }
+
+      console.log('✅ Personal encontrado:', socios.length);
 
       return {
         success: true,
-        data: filteredSocios,
-        lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
-        hasMore: snapshot.docs.length === pageSize
+        data: socios,
+        total: socios.length
       };
     } catch (error) {
-      console.error('Error al obtener socios:', error);
+      console.error('❌ Error al obtener personal:', error);
       return {
         success: false,
         error: this.getErrorMessage(error)
@@ -135,11 +140,11 @@ class SociosService {
       } else {
         return {
           success: false,
-          error: 'Socio no encontrado'
+          error: 'Personal no encontrado'
         };
       }
     } catch (error) {
-      console.error('Error al obtener socio:', error);
+      console.error('Error al obtener personal:', error);
       return {
         success: false,
         error: this.getErrorMessage(error)
@@ -164,10 +169,10 @@ class SociosService {
 
       return {
         success: true,
-        message: 'Socio actualizado exitosamente'
+        message: 'Personal actualizado exitosamente'
       };
     } catch (error) {
-      console.error('Error al actualizar socio:', error);
+      console.error('Error al actualizar personal:', error);
       return {
         success: false,
         error: this.getErrorMessage(error)
@@ -186,10 +191,10 @@ class SociosService {
 
       return {
         success: true,
-        message: 'Socio eliminado exitosamente'
+        message: 'Personal eliminado exitosamente'
       };
     } catch (error) {
-      console.error('Error al eliminar socio:', error);
+      console.error('Error al eliminar personal:', error);
       return {
         success: false,
         error: this.getErrorMessage(error)

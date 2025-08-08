@@ -185,7 +185,7 @@ Este proyecto está bajo la Licencia MIT. Ver archivo LICENSE para más detalles
 ### v1.2.0 - Reestructuración de Personal
 - ✅ Cambio de "Socios" a "Personal" en toda la aplicación
 - ✅ Nuevos campos requeridos: DNI, nombres, apellidos, celular, zona
-- ✅ Actualización de rutas: `/socios/*` → `/personal/*`
+- ✅ Actualización de rutas: `/personal/*` → `/personal/*`
 - ✅ Formulario simplificado y optimizado
 - ✅ Validaciones actualizadas
 

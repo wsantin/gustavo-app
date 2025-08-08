@@ -14,7 +14,8 @@ import {
   List,
   ListItem,
   ListItemAvatar,
-  ListItemText
+  ListItemText,
+  CircularProgress
 } from '@mui/material';
 import {
   Group as GroupIcon,
@@ -43,20 +44,20 @@ function Dashboard() {
   const [recentPersonal, setRecentPersonal] = useState([]);
 
   useEffect(() => {
-    // fetchDashboardData(); // Temporalmente deshabilitado para evitar errores de Firestore
-    setLoading(false);
+    // Cargar datos automáticamente al montar el componente
+    fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
       // Obtener total de personal
-      const personalSnapshot = await getDocs(collection(db, 'socios'));
+      const personalSnapshot = await getDocs(collection(db, 'personal'));
       const totalPersonal = personalSnapshot.size;
       
       // Obtener personal activo
       const personalActivoQuery = query(
-        collection(db, 'socios'),
+        collection(db, 'personal'),
         where('estado', '==', 'activo')
       );
       const personalActivoSnapshot = await getDocs(personalActivoQuery);
@@ -73,7 +74,7 @@ function Dashboard() {
       startOfMonth.setHours(0, 0, 0, 0);
       
       const nuevosMesQuery = query(
-        collection(db, 'socios'),
+        collection(db, 'personal'),
         where('fechaCreacion', '>=', startOfMonth)
       );
       const nuevosMesSnapshot = await getDocs(nuevosMesQuery);
@@ -81,7 +82,7 @@ function Dashboard() {
 
       // Obtener personal reciente
       const recentQuery = query(
-        collection(db, 'socios'),
+        collection(db, 'personal'),
         orderBy('fechaCreacion', 'desc'),
         limit(5)
       );
@@ -147,13 +148,23 @@ function Dashboard() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Dashboard
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Bienvenido de vuelta, {currentUser?.displayName || 'Usuario'}
-        </Typography>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" gutterBottom>
+            Dashboard
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Bienvenido de vuelta, {currentUser?.displayName || 'Usuario'}
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          onClick={fetchDashboardData}
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={20} /> : <TrendingUp />}
+        >
+          {loading ? 'Cargando...' : 'Cargar Estadísticas'}
+        </Button>
       </Box>
 
       <Grid container spacing={3}>

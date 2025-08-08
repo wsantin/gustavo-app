@@ -54,6 +54,7 @@ function ZonasManager() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedZona, setSelectedZona] = useState(null);
+  const [formData, setFormData] = useState({ nombre: '', descripcion: '', activa: true });
 
   const {
     register,
@@ -94,16 +95,24 @@ function ZonasManager() {
   };
 
   const handleAdd = () => {
-    reset({ nombre: '', descripcion: '', activa: true });
+    const defaultData = { nombre: '', descripcion: '', activa: true };
+    setFormData(defaultData);
+    reset(defaultData);
     setSelectedZona(null);
     setShowAddModal(true);
   };
 
   const handleEdit = (zona) => {
     setSelectedZona(zona);
-    setValue('nombre', zona.nombre);
-    setValue('descripcion', zona.descripcion || '');
-    setValue('activa', zona.activa);
+    const data = {
+      nombre: zona.nombre,
+      descripcion: zona.descripcion || '',
+      activa: zona.activa
+    };
+    setFormData(data);
+    setValue('nombre', data.nombre);
+    setValue('descripcion', data.descripcion);
+    setValue('activa', data.activa);
     setShowEditModal(true);
   };
 
@@ -124,10 +133,15 @@ function ZonasManager() {
 
       if (result.success) {
         setSuccess(result.message);
-        reset();
+        // Limpiar form y cerrar modal
+        const defaultData = { nombre: '', descripcion: '', activa: true };
+        setFormData(defaultData);
+        reset(defaultData);
+        setSelectedZona(null);
         setShowAddModal(false);
         setShowEditModal(false);
-        loadData();
+        // Recargar datos después de un pequeño delay para evitar problemas
+        setTimeout(() => loadData(), 100);
       } else {
         setError(result.error);
       }
@@ -207,17 +221,23 @@ function ZonasManager() {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Typography variant="body1">Estado:</Typography>
                 <Button
-                  variant={selectedZona?.activa !== false ? 'contained' : 'outlined'}
+                  variant={formData.activa === true ? 'contained' : 'outlined'}
                   color="success"
-                  onClick={() => setValue('activa', true)}
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, activa: true }));
+                    setValue('activa', true);
+                  }}
                   size="small"
                 >
                   Activa
                 </Button>
                 <Button
-                  variant={selectedZona?.activa === false ? 'contained' : 'outlined'}
+                  variant={formData.activa === false ? 'contained' : 'outlined'}
                   color="error"
-                  onClick={() => setValue('activa', false)}
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, activa: false }));
+                    setValue('activa', false);
+                  }}
                   size="small"
                 >
                   Inactiva
@@ -318,7 +338,7 @@ function ZonasManager() {
                       Con Personal
                     </Typography>
                     <Typography variant="h4" color="info.main">
-                      {Object.keys(stats.sociosPorZona).length}
+                      {Object.keys(stats.personalPorZona).length}
                     </Typography>
                   </Box>
                 </Box>
@@ -409,7 +429,7 @@ function ZonasManager() {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={stats?.sociosPorZona?.[zona.nombre] || 0}
+                        label={stats?.personalPorZona?.[zona.nombre] || 0}
                         color="info"
                         size="small"
                         variant="outlined"
@@ -465,9 +485,9 @@ function ZonasManager() {
             ¿Estás seguro de que deseas eliminar la zona{' '}
             <strong>"{selectedZona?.nombre}"</strong>?
           </Typography>
-          {stats?.sociosPorZona?.[selectedZona?.nombre] && (
+          {stats?.personalPorZona?.[selectedZona?.nombre] && (
             <Alert severity="warning" sx={{ mt: 2 }}>
-              Esta zona tiene {stats.sociosPorZona[selectedZona.nombre]} persona(s) asociada(s).
+              Esta zona tiene {stats.personalPorZona[selectedZona.nombre]} persona(s) asociada(s).
             </Alert>
           )}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
