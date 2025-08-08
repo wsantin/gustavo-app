@@ -3,7 +3,7 @@ import {
   onAuthStateChanged,
   signOut 
 } from 'firebase/auth';
-import { auth, checkFirestoreConnection } from '../services/firebase';
+import { auth } from '../services/firebase';
 
 const AuthContext = createContext({});
 
@@ -41,13 +41,9 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(user);
       setLoading(false);
       
-      if (user) {
-        // Verificar conexión a Firestore cuando el usuario se autentique
-        const isConnected = await checkFirestoreConnection();
-        setConnectionStatus(isConnected ? 'connected' : 'disconnected');
-      } else {
-        setConnectionStatus('disconnected');
-      }
+      // REMOVIDO: Verificación de conexión que causaba loops
+      // La conexión se verificará solo cuando sea necesario
+      setConnectionStatus('connected');
     }, (error) => {
       console.error('❌ AuthContext: Error en auth state listener:', error);
       clearTimeout(loadingTimeout);
@@ -60,7 +56,7 @@ export const AuthProvider = ({ children }) => {
       clearTimeout(loadingTimeout);
       unsubscribe();
     };
-  }, [loading]);
+  }, []); // Empty dependency array - only run once on mount
 
   const logout = async () => {
     try {

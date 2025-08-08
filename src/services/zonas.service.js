@@ -158,15 +158,15 @@ class ZonasService {
 
       const zonaNombre = zonaDoc.data().nombre;
 
-      // Verificar si hay socios usando esta zona (por nombre, no por ID)
-      const sociosSnapshot = await getDocs(
-        query(collection(db, 'socios'), where('zona', '==', zonaNombre))
+      // Verificar si hay personal usando esta zona (por nombre, no por ID)
+      const personalSnapshot = await getDocs(
+        query(collection(db, 'personal'), where('zona', '==', zonaNombre))
       );
 
-      if (!sociosSnapshot.empty) {
+      if (!personalSnapshot.empty) {
         return {
           success: false,
-          error: `No se puede eliminar la zona "${zonaNombre}" porque tiene ${sociosSnapshot.size} socio(s) asociado(s)`
+          error: `No se puede eliminar la zona "${zonaNombre}" porque tiene ${personalSnapshot.size} personal(es) asociado(s)`
         };
       }
 
@@ -187,19 +187,19 @@ class ZonasService {
   async getStats() {
     try {
       const zonasSnapshot = await getDocs(collection(db, this.collectionName));
-      const sociosSnapshot = await getDocs(collection(db, 'socios'));
-      
+      const personalSnapshot = await getDocs(collection(db, 'Personal'));
+
       const zonas = zonasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const socios = sociosSnapshot.docs.map(doc => doc.data());
+      const personal = personalSnapshot.docs.map(doc => doc.data());
 
       const total = zonas.length;
       const activas = zonas.filter(z => z.activa).length;
 
-      // Contar socios por zona
-      const sociosPorZona = {};
-      socios.forEach(socio => {
-        if (socio.zona) {
-          sociosPorZona[socio.zona] = (sociosPorZona[socio.zona] || 0) + 1;
+      // Contar personal por zona
+      const personalPorZona = {};
+      personal.forEach(p => {
+        if (p.zona) {
+          personalPorZona[p.zona] = (personalPorZona[p.zona] || 0) + 1;
         }
       });
 
@@ -209,7 +209,7 @@ class ZonasService {
           total,
           activas,
           inactivas: total - activas,
-          sociosPorZona
+          personalPorZona
         }
       };
     } catch (error) {

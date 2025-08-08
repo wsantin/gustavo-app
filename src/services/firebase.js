@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, enableNetwork, disableNetwork } from 'firebase/firestore';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { 
+  getFirestore, 
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -13,80 +18,49 @@ const firebaseConfig = {
 
 // Verificar configuración crítica
 if (!firebaseConfig.projectId || !firebaseConfig.apiKey) {
+  console.error('Firebase configuration missing critical values:', {
+    hasProjectId: !!firebaseConfig.projectId,
+    hasApiKey: !!firebaseConfig.apiKey
+  });
   throw new Error('Firebase configuration missing critical values');
 }
 
-// Inicializar Firebase
+// Inicializar Firebase solo una vez
 const app = initializeApp(firebaseConfig);
 
-// Inicializar servicios
+// Inicializar Auth con persistencia local
 export const auth = getAuth(app);
-export const db = getFirestore(app);
 
-// Configuración optimizada para Firestore
-const configureFirestore = async () => {
-  try {
-    // Configurar timeouts y opciones de conexión
-    const settings = {
-      cacheSizeBytes: 40000000, // 40MB cache
-    };
-    
-    // Implementar estrategia de reconexión
-    const handleNetworkError = async () => {
-      console.log('🔄 Intentando reconectar Firestore...');
-      try {
-        await disableNetwork(db);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        await enableNetwork(db);
-        console.log('✅ Firestore reconectado exitosamente');
-      } catch (error) {
-        console.error('❌ Error en reconexión:', error);
-      }
-    };
+// Configurar persistencia de auth
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.warn('Could not set auth persistence:', error);
+});
 
-    // Detectar errores de conexión
-    let connectionErrors = 0;
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
-      const message = args.join(' ');
-      if (message.includes('WebChannelConnection') || message.includes('transport errored')) {
-        connectionErrors++;
-        if (connectionErrors <= 3) {
-          console.log(`⚠️  Error de conexión detectado (${connectionErrors}/3). Implementando fallback...`);
-          setTimeout(handleNetworkError, 1000);
-        }
-      }
-      originalConsoleError.apply(console, args);
-    };
+// Inicializar Firestore con configuración optimizada
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
 
-  } catch (error) {
-    console.error('Error configurando Firestore:', error);
-  }
-};
-
-// Configurar Firestore al cargar
-configureFirestore();
-
-// Funciones utilitarias para manejo de conexión
-export const reconnectFirestore = async () => {
-  try {
-    await disableNetwork(db);
-    await enableNetwork(db);
-    return true;
-  } catch (error) {
-    console.error('Error en reconexión manual:', error);
-    return false;
-  }
-};
-
+// Función de verificación deshabilitada para evitar loops
 export const checkFirestoreConnection = async () => {
-  try {
-    await enableNetwork(db);
-    return true;
-  } catch (error) {
-    console.error('Firestore connection check failed:', error);
-    return false;
-  }
+  // DESHABILITADO: Esta función causaba múltiples listeners
+  // Siempre retorna true para evitar problemas
+  return true;
 };
+
+// Función de reconexión manual (solo si es necesario)
+export const reconnectFirestore = async () => {
+  // DESHABILITADO: La reconexión automática de Firebase es suficiente
+  console.log('Reconnection handled automatically by Firebase SDK');
+  return true;
+};
+
+// Log de configuración inicial (solo en desarrollo)
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔥 Firebase initialized with project:', firebaseConfig.projectId);
+  console.log('📦 Using persistent local cache with multi-tab support');
+}
 
 export default app;

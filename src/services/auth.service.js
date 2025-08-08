@@ -52,24 +52,9 @@ class AuthService {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Verificar/crear documento de usuario
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        
-        if (!userDoc.exists()) {
-          await setDoc(doc(db, 'users', user.uid), {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || user.email,
-            role: 'admin',
-            createdAt: serverTimestamp(),
-            isActive: true
-          });
-        }
-      } catch (firestoreError) {
-        // Continuar con el login aunque Firestore falle
-        console.warn('Warning: Could not verify/create user document');
-      }
+      // REMOVIDO temporalmente: Verificación de documento de usuario
+      // Esta verificación puede causar problemas si Firestore tiene latencia
+      // El documento se creará cuando sea necesario en otro momento
 
       return {
         success: true,

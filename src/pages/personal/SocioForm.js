@@ -34,7 +34,7 @@ import {
   Add as AddIcon
 } from '@mui/icons-material';
 import { socioSchema } from '../../utils/validators';
-import sociosService from '../../services/socios.service';
+import sociosService from '../../services/personal.service';
 import zonasService from '../../services/zonas.service';
 
 function SocioForm() {
@@ -53,6 +53,9 @@ function SocioForm() {
   const [newZonaName, setNewZonaName] = useState('');
   const [newZonaDescription, setNewZonaDescription] = useState('');
   const [savingZona, setSavingZona] = useState(false);
+  
+  // Estado para el Autocomplete de zona
+  const [selectedZona, setSelectedZona] = useState(null);
 
   const {
     register,
@@ -72,10 +75,29 @@ function SocioForm() {
   });
 
   useEffect(() => {
-    loadInitialData();
-    if (isEdit) {
-      loadSocio();
-    }
+    const initializeForm = async () => {
+      // Limpiar zona seleccionada
+      setSelectedZona(null);
+      
+      // Primero cargar las zonas y esperar a que termine
+      console.log('🔄 Inicializando formulario...');
+      await loadInitialData();
+      
+      // Si es edición, cargar los datos después de que se hayan cargado las zonas
+      if (isEdit) {
+        // Obtener las zonas actualizadas del estado
+        const zonasResult = await zonasService.getZonas();
+        if (zonasResult.success) {
+          const zonasArray = Array.isArray(zonasResult.data) ? zonasResult.data : [];
+          console.log('🏢 Pasando zonas a loadSocio:', zonasArray.map(z => z.nombre));
+          await loadSocio(zonasArray);
+        } else {
+          await loadSocio([]);
+        }
+      }
+    };
+    
+    initializeForm();
   }, [isEdit, id]);
 
   const loadInitialData = async () => {
@@ -94,24 +116,52 @@ function SocioForm() {
     }
   };
 
-  const loadSocio = async () => {
+  const loadSocio = async (zonasArray = zonas) => {
     setInitialLoading(true);
     try {
+      console.log('🔍 Cargando datos del personal con ID:', id);
+      console.log('🏢 Zonas disponibles al momento de cargar:', zonasArray.map(z => z.nombre));
+      
       const result = await sociosService.getSocioById(id);
       
       if (result.success) {
         const socio = result.data;
-        // Cargar solo los campos del formulario simplificado
+        console.log('📋 Datos del personal cargados:', socio);
+        
+        // Cargar campos del formulario con logs para debug
         setValue('dni', socio.dni || '');
         setValue('nombres', socio.nombres || '');
         setValue('apellidos', socio.apellidos || '');
         setValue('celular', socio.celular || '');
-        setValue('zona', socio.zona || '');
+        
+        // Verificar y cargar zona con debug
+        const zonaValue = socio.zona || '';
+        console.log('🏢 Zona a cargar:', zonaValue);
+        setValue('zona', zonaValue);
+        
+        // Encontrar la zona correspondiente en la lista y seleccionarla
+        if (zonaValue && zonasArray.length > 0) {
+          const zonaObj = zonasArray.find(z => z.nombre === zonaValue);
+          console.log('🏢 Zona encontrada para seleccionar:', zonaObj);
+          setSelectedZona(zonaObj || null);
+          
+          if (!zonaObj) {
+            console.warn('⚠️ No se encontró la zona en la lista disponible');
+          }
+        } else {
+          setSelectedZona(null);
+          if (zonaValue) {
+            console.warn('⚠️ Zona requerida pero lista de zonas vacía');
+          }
+        }
+        
+        setSuccess('Datos del personal cargados correctamente');
       } else {
-        setError('No se pudo cargar los datos del personal');
+        console.error('❌ Error al cargar personal:', result.error);
+        setError('No se pudo cargar los datos del personal: ' + result.error);
       }
     } catch (error) {
-      console.error('Error al cargar personal:', error);
+      console.error('❌ Error al cargar personal:', error);
       setError('Error al cargar los datos del personal');
     } finally {
       setInitialLoading(false);
@@ -134,8 +184,19 @@ function SocioForm() {
       if (result.success) {
         // Recargar lista de zonas
         await loadInitialData();
-        // Seleccionar la nueva zona
+        
+        // Crear objeto de zona para seleccionar
+        const nuevaZona = {
+          id: 'temp-' + Date.now(), // ID temporal
+          nombre: newZonaName.trim(),
+          descripcion: newZonaDescription.trim(),
+          activa: true
+        };
+        
+        // Seleccionar la nueva zona en el autocomplete
+        setSelectedZona(nuevaZona);
         setValue('zona', newZonaName.trim());
+        
         // Cerrar modal y limpiar
         setShowAddZonaModal(false);
         setNewZonaName('');
@@ -291,11 +352,13 @@ function SocioForm() {
 
               {/* Zona */}
               <Grid item xs={12}>
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', width: '100%' }}>
                   <Autocomplete
+                    sx={{ flex: 1, minWidth: 200, maxWidth: 250 }}
                     fullWidth
                     options={zonas}
-                    getOptionLabel={(option) => option.nombre || ''}
+                    value={selectedZona}
+                    getOptionLabel={(option) => option?.nombre || ''}
                     renderOption={(props, option) => (
                       <Box component="li" {...props}>
                         <Box>
@@ -318,12 +381,16 @@ function SocioForm() {
                       />
                     )}
                     onChange={(event, value) => {
+                      console.log('🏢 Zona seleccionada:', value);
+                      setSelectedZona(value);
                       setValue('zona', value ? value.nombre : '');
                     }}
                     noOptionsText="No se encontraron zonas"
-                    isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
+                    isOptionEqualToValue={(option, value) => {
+                      if (!option || !value) return option === value;
+                      return option.nombre === value.nombre;
+                    }}
                   />
-                  
                   <IconButton
                     color="primary"
                     onClick={() => setShowAddZonaModal(true)}

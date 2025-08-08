@@ -44,20 +44,20 @@ function Dashboard() {
   const [recentPersonal, setRecentPersonal] = useState([]);
 
   useEffect(() => {
-    // No cargar datos automáticamente - solo cuando el usuario haga click en "Refrescar"
-    setLoading(false);
+    // Cargar datos automáticamente al montar el componente
+    fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
       // Obtener total de personal
-      const personalSnapshot = await getDocs(collection(db, 'socios'));
+      const personalSnapshot = await getDocs(collection(db, 'personal'));
       const totalPersonal = personalSnapshot.size;
       
       // Obtener personal activo
       const personalActivoQuery = query(
-        collection(db, 'socios'),
+        collection(db, 'personal'),
         where('estado', '==', 'activo')
       );
       const personalActivoSnapshot = await getDocs(personalActivoQuery);
@@ -74,7 +74,7 @@ function Dashboard() {
       startOfMonth.setHours(0, 0, 0, 0);
       
       const nuevosMesQuery = query(
-        collection(db, 'socios'),
+        collection(db, 'personal'),
         where('fechaCreacion', '>=', startOfMonth)
       );
       const nuevosMesSnapshot = await getDocs(nuevosMesQuery);
@@ -82,7 +82,7 @@ function Dashboard() {
 
       // Obtener personal reciente
       const recentQuery = query(
-        collection(db, 'socios'),
+        collection(db, 'personal'),
         orderBy('fechaCreacion', 'desc'),
         limit(5)
       );

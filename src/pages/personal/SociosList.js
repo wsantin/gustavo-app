@@ -43,7 +43,7 @@ import {
   KeyboardArrowDown as KeyboardArrowDownIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import sociosService from '../../services/socios.service';
+import sociosService from '../../services/personal.service';
 import zonasService from '../../services/zonas.service';
 
 function SociosList() {
@@ -90,12 +90,10 @@ function SociosList() {
     loadSocios();
   };
 
-  // Solo recargar cuando cambian los filtros de zona y estado
+  // Solo recargar cuando cambia el filtro de zona
   useEffect(() => {
-    if (zonaFilter || estadoFilter) {
-      loadSocios();
-    }
-  }, [zonaFilter, estadoFilter]);
+    loadSocios();
+  }, [zonaFilter]);
 
   const loadInitialData = async () => {
     try {
@@ -117,10 +115,11 @@ function SociosList() {
     setLoading(true);
     setError('');
     try {
+      console.log('🔍 Aplicando filtros:', { searchTerm, zona: zonaFilter });
+      
       const result = await sociosService.getSocios({
         searchTerm,
-        zona: zonaFilter,
-        estado: estadoFilter
+        zona: zonaFilter
       });
 
       if (result.success) {
@@ -179,7 +178,8 @@ function SociosList() {
   const clearFilters = () => {
     setSearchTerm('');
     setZonaFilter('');
-    setEstadoFilter('');
+    // Recargar datos sin filtros
+    loadSocios();
   };
 
   const getInitials = (nombres, apellidos) => {
@@ -253,7 +253,7 @@ function SociosList() {
 
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
-  // Filtrar y ordenar datos
+  // Filtrar y ordenar datos (sin filtro de estado)
   const filteredSocios = socios.filter(socio => {
     const matchesSearch = !searchTerm || 
       socio.dni?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -262,9 +262,8 @@ function SociosList() {
       socio.celular?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesZona = !zonaFilter || socio.zona === zonaFilter;
-    const matchesEstado = !estadoFilter || socio.estado === estadoFilter;
     
-    return matchesSearch && matchesZona && matchesEstado;
+    return matchesSearch && matchesZona;
   });
 
   const sortedSocios = stableSort(filteredSocios, getComparator(order, orderBy));
@@ -348,6 +347,7 @@ function SociosList() {
               <Select
                 value={zonaFilter}
                 label="Zona"
+                sx={{ minWidth: 120 }}
                 onChange={(e) => setZonaFilter(e.target.value)}
               >
                 <MenuItem value="">Todas</MenuItem>
@@ -356,21 +356,6 @@ function SociosList() {
                     {zona.nombre}
                   </MenuItem>
                 ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Estado</InputLabel>
-              <Select
-                value={estadoFilter}
-                label="Estado"
-                onChange={(e) => setEstadoFilter(e.target.value)}
-              >
-                <MenuItem value="">Todos</MenuItem>
-                <MenuItem value="activo">Activo</MenuItem>
-                <MenuItem value="inactivo">Inactivo</MenuItem>
               </Select>
             </FormControl>
           </Grid>

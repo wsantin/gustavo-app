@@ -11,8 +11,8 @@ import theme from './styles/theme';
 // Lazy loading de componentes
 const Login = lazy(() => import('./pages/auth/Login'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
-const SociosList = lazy(() => import('./pages/socios/SociosList'));
-const SocioForm = lazy(() => import('./pages/socios/SocioForm'));
+const SociosList = lazy(() => import('./pages/personal/SociosList'));
+const SocioForm = lazy(() => import('./pages/personal/SocioForm'));
 const ZonasManager = lazy(() => import('./pages/zonas/ZonasManager'));
 
 // Componente de loading
@@ -36,7 +36,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
+        <Router basename="/gustavo-app">
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               <Route path="/login" element={<Login />} />
