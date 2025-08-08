@@ -84,7 +84,16 @@ export const socioSchema = yup.object({
     .required('El celular es requerido'),
   zona: yup
     .string()
-    .required('La zona es requerida')
+    .required('La zona es requerida'),
+  direccion: yup
+    .string()
+    .min(5, 'La dirección debe tener al menos 5 caracteres')
+    .max(100, 'La dirección no puede tener más de 100 caracteres')
+    .required('La dirección es requerida'),
+  fechaJuramentacion: yup
+    .date()
+    .max(new Date(), 'La fecha de juramentación no puede ser futura')
+    .required('La fecha de juramentación es requerida')
 });
 
 // Validaciones para zonas

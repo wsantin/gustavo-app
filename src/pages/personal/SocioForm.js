@@ -26,6 +26,10 @@ import {
   DialogContent,
   DialogActions
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { es } from 'date-fns/locale';
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
@@ -62,7 +66,8 @@ function SocioForm() {
     handleSubmit,
     formState: { errors },
     reset,
-    setValue
+    setValue,
+    watch
   } = useForm({
     resolver: yupResolver(socioSchema),
     defaultValues: {
@@ -70,9 +75,14 @@ function SocioForm() {
       nombres: '',
       apellidos: '',
       celular: '',
-      zona: ''
+      zona: '',
+      direccion: '',
+      fechaJuramentacion: null
     }
   });
+
+  // Observar el campo de fecha para el DatePicker
+  const fechaJuramentacion = watch('fechaJuramentacion');
 
   useEffect(() => {
     const initializeForm = async () => {
@@ -133,6 +143,16 @@ function SocioForm() {
         setValue('nombres', socio.nombres || '');
         setValue('apellidos', socio.apellidos || '');
         setValue('celular', socio.celular || '');
+        setValue('direccion', socio.direccion || '');
+        
+        // Cargar fecha de juramentación
+        if (socio.fechaJuramentacion) {
+          const fecha = socio.fechaJuramentacion instanceof Date 
+            ? socio.fechaJuramentacion 
+            : socio.fechaJuramentacion.toDate ? socio.fechaJuramentacion.toDate() 
+            : new Date(socio.fechaJuramentacion);
+          setValue('fechaJuramentacion', fecha);
+        }
         
         // Verificar y cargar zona con debug
         const zonaValue = socio.zona || '';
@@ -228,6 +248,8 @@ function SocioForm() {
         apellidos: data.apellidos.trim(),
         celular: data.celular.trim(),
         zona: data.zona,
+        direccion: data.direccion.trim(),
+        fechaJuramentacion: data.fechaJuramentacion,
         // Campos adicionales para mantener compatibilidad
         estado: 'activo',
         fechaRegistro: new Date()
@@ -299,8 +321,8 @@ function SocioForm() {
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <Grid container spacing={3}>
-              {/* DNI */}
+            <Grid container spacing={2}>
+              {/* DNI y Celular */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -312,12 +334,10 @@ function SocioForm() {
                   inputProps={{ maxLength: 8 }}
                 />
               </Grid>
-
-              {/* Celular */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Celular *"
+                  label="Celular"
                   placeholder="Ej: 987654321"
                   {...register('celular')}
                   error={!!errors.celular}
@@ -326,7 +346,7 @@ function SocioForm() {
                 />
               </Grid>
 
-              {/* Nombres */}
+              {/* Nombres y Apellidos */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -337,8 +357,6 @@ function SocioForm() {
                   helperText={errors.nombres?.message}
                 />
               </Grid>
-
-              {/* Apellidos */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -350,12 +368,50 @@ function SocioForm() {
                 />
               </Grid>
 
-              {/* Zona */}
+              {/* Dirección */}
               <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Dirección *"
+                  placeholder="Ej: Av. Lima 123, San Martín de Porres"
+                  {...register('direccion')}
+                  error={!!errors.direccion}
+                  helperText={errors.direccion?.message}
+                  multiline
+                  rows={2}
+                />
+              </Grid>
+
+              {/* Fecha de Juramentación y Zona */}
+              <Grid item xs={12} md={6}>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                  <DatePicker
+                    label="Fecha de Juramentación *"
+                    value={fechaJuramentacion}
+                    sx={{  maxWidth: 200 }}
+                    onChange={(newValue) => {
+                      setValue('fechaJuramentacion', newValue);
+                    }}
+                    enableAccessibleFieldDOMStructure={false}
+                    slots={{
+                      textField: (params) => (
+                        <TextField
+                          {...params}
+                          fullWidth
+                          error={!!errors.fechaJuramentacion}
+                          helperText={errors.fechaJuramentacion?.message}
+                        />
+                      ),
+                    }}
+                    format="dd/MM/yyyy"
+                  />
+                </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} md={6}>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', width: '100%' }}>
                   <Autocomplete
-                    sx={{ flex: 1, minWidth: 200, maxWidth: 250 }}
                     fullWidth
+                    sx={{  minWidth: 120 }}
                     options={zonas}
                     value={selectedZona}
                     getOptionLabel={(option) => option?.nombre || ''}
@@ -381,7 +437,6 @@ function SocioForm() {
                       />
                     )}
                     onChange={(event, value) => {
-                      console.log('🏢 Zona seleccionada:', value);
                       setSelectedZona(value);
                       setValue('zona', value ? value.nombre : '');
                     }}
@@ -408,7 +463,7 @@ function SocioForm() {
 
               {/* Botones */}
               <Grid item xs={12}>
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   <Button
                     variant="outlined"
                     onClick={() => navigate('/personal')}
@@ -416,7 +471,6 @@ function SocioForm() {
                   >
                     Cancelar
                   </Button>
-                  
                   <Button
                     type="submit"
                     variant="contained"
@@ -454,6 +508,8 @@ function SocioForm() {
           • El DNI debe tener exactamente 8 dígitos<br/>
           • El celular debe empezar con 9 y tener 9 dígitos en total<br/>
           • Los nombres y apellidos solo pueden contener letras y espacios<br/>
+          • La dirección debe incluir calle y número<br/>
+          • La fecha de juramentación no puede ser futura<br/>
           • Todos los campos marcados con (*) son obligatorios
         </Typography>
       </Paper>

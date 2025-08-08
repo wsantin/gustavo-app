@@ -281,10 +281,12 @@ function SociosList() {
 
   const columns = [
     { id: 'dni', label: 'DNI', sortable: true, width: 100 },
-    { id: 'nombres', label: 'Nombres', sortable: true, width: 140 },
-    { id: 'apellidos', label: 'Apellidos', sortable: true, width: 140 },
+    { id: 'nombres', label: 'Nombres', sortable: true, width: 130 },
+    { id: 'apellidos', label: 'Apellidos', sortable: true, width: 130 },
     { id: 'celular', label: 'Celular', sortable: true, width: 110 },
-    { id: 'zona', label: 'Zona', sortable: true, width: 150 },
+    { id: 'zona', label: 'Zona', sortable: true, width: 120 },
+    { id: 'direccion', label: 'Dirección', sortable: true, width: 160 },
+    { id: 'fechaJuramentacion', label: 'Fecha Juramentación', sortable: true, width: 140 },
     { id: 'acciones', label: 'Acciones', sortable: false, width: 150 }
   ];
 
@@ -439,13 +441,13 @@ function SociosList() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={10} align="center">
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : paginatedSocios.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={10} align="center">
                     <Typography variant="body2" color="text.secondary">
                       No hay personal registrado
                     </Typography>
@@ -491,6 +493,19 @@ function SociosList() {
                           variant="outlined"
                           color="primary"
                         />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {socio.direccion || '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {socio.fechaJuramentacion ? 
+                            new Date(socio.fechaJuramentacion.seconds ? socio.fechaJuramentacion.toDate() : socio.fechaJuramentacion).toLocaleDateString('es-PE') 
+                            : '-'
+                          }
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
