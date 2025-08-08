@@ -38,8 +38,8 @@ function Login() {
   } = useForm({
     resolver: yupResolver(loginSchema),
     defaultValues: {
-      email: 'gustavo@sullana.pe',
-      password: 'Gustavo25$26'
+      email: '',
+      password: ''
     }
   });
 
